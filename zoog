@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>p5js Template</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.3/p5.js"></script>
+    
+    <script>
+        function setup() {
+            createCanvas(800,600);
+        }
+
+        function draw() {
+            //the basic outline of the monster
+            fill('white')
+            stroke('black');
+            strokeWeight(15);
+            ellipse(400,300,400,400); 
+            
+            //colors the top half of the monster
+            fill('purple');
+            arc(400,300,400,400,PI,0, OPEN); 
+            
+            
+            fill('white');
+            strokeWeight(20);
+            line(200,300,600,300); //divide the monster in half
+            ellipse(400,300,150,150); //get small cirlce in the monster
+            
+            //the center button : his mouth
+            stroke('black');
+            strokeWeight(5);
+            fill('gray');
+            ellipse(400,300,85,85); 
+            
+            // M on head
+            textAlign(CENTER);
+            textSize(75);
+            fill('white'); 
+            text("M",400,200);
+            
+            //eyeball
+            fill('pink');
+            ellipse(290,210,100,100);       
+            ellipse(510,210,100,100);
+            
+            //eye
+            rectMode(CENTER);
+            fill('black')
+            rect(290,210,20,20); //his eyes
+            rect(510,210,20,20);
+            
+            //speech
+            fill('pink')
+            textSize(25)
+            text("Suppose I'm a master ball",510,530) //speech
+            text('However call me monster ball',510,580)
+        }
+    </script>
+</head>
+
+<body>
+    <div id="code" class="container-fluid">
+        <script src="https://gist-it.appspot.com/github/zhiyuanc1718/p5js/blob/gh-pages/zoog.html?footer=0"></script>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script>
+        $(window).bind("load", function() {
+            $('#code').before($('#defaultCanvas0').remove());
+        });
+    </script>
+</body>
+</html>
