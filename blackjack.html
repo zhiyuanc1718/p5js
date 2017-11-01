@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>p5js Template</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.3/p5.js"></script>
+    
+    <script>
+        var number = ["A",2,3,4,5,6,7,8,9,10,"J","Q","K"]; // the card set
+        var card; //determines by random with the card set
+        var total = [0,0]; //totals under noraml ace value and ace as 11
+        var shift = 0; //location of card
+        var allowDeal = true;  //prevents deal to work under conditions
+        var ychange = 0; //card into another row
+        
+        function setup() {
+            createCanvas(800,800);
+            background(200)
+            textAlign(CENTER);
+            textSize(40)
+            text("Single Player BLACKJACK (21)",450,80)  //Game title
+        }
+
+        function draw() {
+            // HIT Box
+            rect(50,50,100,50);
+            textSize(30);
+            text("HIT",100,85);
+        }
+        
+        function keyPressed(){
+            if (keyCode === ENTER){  //reset the game
+                allowDeal = true;
+                total = [0,0]; 
+                shift = 0;
+                ychange = 0;
+                clear(); //clears things: below : draws things back
+                background(200);
+                textSize(40);
+                text("Single Player BLACKJACK (21)",450,80);}
+        }
+        
+        function mouseClicked(){
+            if (mouseX >= 50 && mouseX <= 150){  //if mouseX in HIT box range
+              if (mouseY >= 50 && mouseY <= 100){  //if mouseY in HIT box range
+                if (allowDeal){  //When dealing is allowed
+                  
+                  // draw card
+                  rect(50+shift,110+ychange,100,150,15)
+                  textSize(30)
+                  card = floor((random(0,25)/2))  //index up to 12
+                  
+                  // label card
+                  text(number[card],67+shift,140+ychange)  
+                  text(number[card],133+shift,250+ychange)
+                  
+                  if (card >= 9){  // 10 & JQK face cards are worth 10. 
+                    card = 9 } // 10's array index is 9
+                  
+                  textSize(20)
+                  text("Worth:" + (card + 1), 100+shift,280+ychange) //label card value
+                  shift = shift + 150
+                  
+                  if (card == 0 && total[1]== 0){ //this only happens once
+                    total[1] = total[0]+ 10 //add 10: ace values are 1,11 : difference is 10
+                    text("Worth:11",shift-50,300)}
+                  
+                  if (total[1] > 0){ //starts the use of total[1]
+                    total[1] = total[1] + (card + 1)} //add original ace value here
+                  
+                  total[0] = total[0] + (card + 1) //original: total[0]
+                  
+                  //losing : pass 21
+                  if (total[0] > 21){ 
+                    textSize(50);
+                    text("Gameover!!",400,550);
+                    text("HIT ENTER for new game",400,650);
+                    allowDeal = false;}  //prevents another deal
+                  
+                  //winning : equal to 21
+                  if (total[0] == 21 || total[1] == 21){ //if ace worth 11 and total[1] is 21
+                    textSize(50);
+                    text("BlackJack! You Won!!",400,550);
+                    allowDeal = false;} 
+                  
+                  //move cards in place
+                  if (shift == 750){ //shifting of the location of cards
+                    ychange = ychange + 200; //when canvas been taken up: next row
+                    shift = 0;} //reset
+                } 
+              }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="code" class="container-fluid">
+        <script src="https://gist-it.appspot.com/github/zhiyuanc1718/p5js/blob/gh-pages/blackjack.html?footer=0"></script>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script>
+        $(window).bind("load", function() {
+            $('#code').before($('#defaultCanvas0').remove());
+        });
+    </script>
+</body>
+
+
+</html>
