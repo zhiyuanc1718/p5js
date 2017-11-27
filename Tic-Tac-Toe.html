@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>p5js Template</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.3/p5.js"></script>
+
+    <script>
+        //Global Variables-------------------------------------------
+        var coords; //x,y of grids/board
+        var player; //used as a player switch (turns) && move count
+        var tileData; //each grid has a data value
+        var wincombo; //the 8 ways to win in any tic tac toe game
+        var moves; //stores both player's moves and computer's
+        var mode = true; //true for pvp , false for pvc
+        var bestmove; 
+        var minimax;
+        
+        
+        //The start and restart-------------------------------------
+        function setup(){   //setup() will be called to reset
+            //the tic tac toe grid
+            createCanvas(800,800)
+            background(200)
+            line(width *3/8, height/8, width *3/8, height *7/8)
+            line(width *5/8, height/8, width *5/8, height *7/8)
+            line(width/8, height *3/8, width *7/8, height *3/8)
+            line(width/8, height *5/8, width *7/8, height *5/8)
+
+            //mode swap button
+            fill(255)
+            rect(width/27,height/16,width/10,height*3/80)
+
+            //the reset button
+            rect(width/8,height-3/4*height/8,width/8,height/16) //100,725,100,50
+            fill(0)
+            textSize(width/32) //=25
+            textAlign(CENTER)
+            text('Mode',width*0.7/8,height*3/32)        //for the mode button
+            text('Player O',width*0.7/8,height*11/80)
+            text('vs.',width*0.7/8,height*13/80)
+            if (mode){
+              text('Player X',width*0.7/8,height*15/80)
+            }else{
+              text('Computer X',width*0.7/8,height*15/80)
+            }
+            text('RESET',width*1.5/8,height-height/20)  //for the reset button
+
+            //the title
+            textSize(width*7/80) //=70
+            text('TIC-TAC-TOE',width/2,height/8)
+
+            //variables initalized/reset
+            minimax = -1        //not any of the moves for preventing losing
+            bestmove = [4,4]    //computer chooses center as first best-fit move
+            player = -1;
+            coords = [width/8,height/8,    width *3/8,height/8,     width*5/8,height/8,
+                      width/8,height *3/8, width *3/8,height *3/8,  width*5/8,height *3/8,
+                      width/8,height *5/8, width *3/8,height *5/8,  width*5/8,height *5/8];
+            tileData = [0,1,2,3,4,5,6,7,8];
+
+            wincombo = [[0,1,2],[3,4,5],[6,7,8],    //horizontal wins
+                        [0,4,8],[2,4,6],            //diagonal wins
+                        [0,3,6],[1,4,7],[2,5,8]];   //vertical wins
+            /* wincombo based on
+              0   1   2
+              3   4   5
+              6   7   8 */
+
+            moves = [[/* circle[0] */],[/* x[1] */],[/* computer */]];
+        }
+
+        //Main algorithm : -----------------------------my own function
+
+        function winner(index,side,symbol){  //index: circle=0 & x=1, side is true/false
+
+        //loops through every single element from player's tiles and winning combinations
+            fill(0) //refresh color to black
+            stroke(0)
+            strokeWeight(1)
+            for (var x=0 ; x<moves[index].length ; x++){            //for the moves of player c or x
+                for (var a=0 ; a<wincombo.length ; a++){            //for the sets of winning combos
+                    for (var b=0 ; b<wincombo[a].length ; b++){     //for the individual elements in each set
+                        if (moves[index][x]===wincombo[a][b]){      //if the elements match any of player's move
+                            wincombo[a][b]=side;}}}}                //change the value of the element to true/false
+
+            for (var y=0 ; y<wincombo.length ; y++){                //loop through the winning combos
+                    if (wincombo[y][0]===side && wincombo[y][1]===side && wincombo[y][2]===side && player !== false){
+                    //if a set of combo is all true or false: then...
+                        player = false; //disable further moves
+                        text(symbol + ' wins',width*5/8,height-height/40);
+                        strokeWeight(10)
+                        if (y<3){                                       //the winning set is horizontal
+                            line(width/8 + width/40,height/4+y*height/4,width*7/8- width/40,height/4+y*height/4)
+                        }else if(y>4){                                  //the winning set is veritcal
+                            line(width/4+(y-5)*width/4,height/8+height/40,width/4+(y-5)*width/4,height*7/8-height/40)
+                        }else if(y==3){                                 //diagonal to the lower R-corner
+                            line(width/8+width/20,height/8+height/20,width*7/8-width/20,height*7/8-width/20)
+                        }else{                                          //diagonal to the lower L-corner
+                            line(width*7/8-width/20,height/8+height/20,width/8+width/20,height*7/8-height/20)
+                        }
+                    }
+            }
+            if (player === 8){ //well if 9 moves made (-1 + 9 = 8) and player is not false but a number
+                 text('X O Draw!',width*5/8,height-height/40) //no declare winner becomes a draw
+            }
+
+        }
+        
+        //The computer's brain (AI)------------------------------------------
+        function deeper_thinking(for_side){
+            for (var j=0; j<8; j++){
+                if (wincombo[j][0]===for_side && wincombo[j][1]===for_side && wincombo[j][2]!==!for_side){
+                    minimax = wincombo[j][2]
+                }else if (wincombo[j][1]===for_side && wincombo[j][2]===for_side && wincombo[j][0]!==!for_side){
+                    minimax = wincombo[j][0]
+                }else if (wincombo[j][0]===for_side && wincombo[j][2]===for_side && wincombo[j][1]!==!for_side){
+                    minimax = wincombo[j][1]
+                }
+            }
+        }
+        function nextmove(plan_to_move){        //this isn't necessary but to make things organized
+            if (!mode && player !== false){
+                plan_to_move = random(bestmove)     //the move will be based on remaining grids
+                deeper_thinking(false)              //check if the computer can win
+                if (minimax !== -1){                //minimax is originally -1 so if it changes
+                    plan_to_move = minimax          //[winning] move
+                }else if (minimax === -1){          //check if the human player can win
+                    deeper_thinking(true)
+                    if (minimax !== -1){            //if the human can win
+                        plan_to_move = minimax      //[block] move
+                    }
+                }
+                for (t=0; t < tileData.length; t++){
+                    if (plan_to_move === tileData[t]){  //find the corresponding grid of the move
+                    textSize(100)
+                    text("X",coords[2*t] + width/8,coords[2*t+1] + height*1.35/8)
+                    moves[2].push(tileData[t]);
+                    coords.splice(2*t,2);
+                    tileData.splice(t,1)
+                    player+=1               //send player back to even so circle goes
+                    winner(2,false,'x');
+                    minimax = -1            //reset minimax to -1 so checking for win & block works
+                    bestmove = tileData     // make random moves next as its default setting
+                    }
+                }
+            }
+        }
+        
+        //The game itself (drawing,sketch):---------------------------------
+
+        function mousePressed(){
+            if (mouseX > width/8 && mouseX < width/4 && mouseY > height-3/4*height/8 && mouseY < height-1/4*height/8){
+                setup();} //mouse in the reset box
+            if (mouseX > width/27 && mouseY > height/16 && mouseX < width/27 + width/10 && mouseY < height/16 + height*3/80){
+                mode = !mode;   //swap the mode; true to false, false to true
+                setup();}
+            if (player !== false){                                              //Is clicking allowed?
+                for (r=0,d=0 ; r<18,d<9 ; r+=2,d++){                            //the loop for coordinates
+                    if (mouseX > coords[r] && mouseX < coords[r] + width/4){    //in the range?
+                        if (mouseY > coords[r+1] && mouseY < coords[r+1] + height/4){
+                            player++    //player swap. inital -1 becomes 0
+                            fill(200)
+
+                            if (pow(2,player) == pow(-2,player)){ //make opposites equal: (2)squared = (-2)squared
+                                strokeWeight(7)
+                                stroke(255)
+                                ellipse(coords[r] + width/8,coords[r+1] + height/8,100,100);
+                                moves[0].push(tileData[d]); //stores the moves
+                                winner(0,true,"circle");
+                                if (tileData[d] === 4){     //if human takes center, take a corner
+                                    bestmove = [0,2,6,8]
+                                }
+                            }else{
+                                textAlign(CENTER);
+                                textSize(100);
+                                fill(0);
+                                stroke(0)
+                                strokeWeight(1)
+                                text("X",coords[r] + width/8,coords[r+1] + height*1.35/8)
+                                moves[1].push(tileData[d]);
+                                winner(1,false,'x');
+                            }
+                            coords.splice(r,2);
+                            tileData.splice(d,1);
+                            nextmove(bestmove)  //this code is found in function nextmove
+                        }
+                    }
+                }
+            }
+        }
+    //
+    </script>
+</head>
+
+<body>
+    <div id="code" class="container-fluid">
+        <script src="https://gist-it.appspot.com/github/zhiyuanc1718/p5js/blob/master/Tic-Tac-Toe.html?footer=0"></script>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script>
+        $(window).bind("load", function() {
+            $('#code').before($('#defaultCanvas0').remove());
+        });
+    </script>
+</body>
+
+</html>
