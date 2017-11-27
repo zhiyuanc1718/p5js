@@ -102,16 +102,16 @@
                     }
             }
             if (player === 8){ //well if 9 moves made (-1 + 9 = 8) and player is not false but a number
-                 text('X O Draw!',width*5/8,height-height/40) //no declare winner becomes a draw
+                 text('X O Draw!',width*5/8,height-height/40) //no winner becomes a draw
             }
 
         }
         
         //The computer's brain (AI)------------------------------------------
-        function deeper_thinking(for_side){
-            for (var j=0; j<8; j++){
+        function thinking(for_side){
+            for (var j=0; j<8; j++){    //Look for two in a row, then decide to [block] or [play win]
                 if (wincombo[j][0]===for_side && wincombo[j][1]===for_side && wincombo[j][2]!==!for_side){
-                    minimax = wincombo[j][2]
+                    minimax = wincombo[j][2]    
                 }else if (wincombo[j][1]===for_side && wincombo[j][2]===for_side && wincombo[j][0]!==!for_side){
                     minimax = wincombo[j][0]
                 }else if (wincombo[j][0]===for_side && wincombo[j][2]===for_side && wincombo[j][1]!==!for_side){
@@ -119,45 +119,18 @@
                 }
             }
         }
-        function nextmove(plan_to_move){        //this isn't necessary but to make things organized
-            if (!mode && player !== false){
-                plan_to_move = random(bestmove)     //the move will be based on remaining grids
-                deeper_thinking(false)              //check if the computer can win
-                if (minimax !== -1){                //minimax is originally -1 so if it changes
-                    plan_to_move = minimax          //[winning] move
-                }else if (minimax === -1){          //check if the human player can win
-                    deeper_thinking(true)
-                    if (minimax !== -1){            //if the human can win
-                        plan_to_move = minimax      //[block] move
-                    }
-                }
-                for (t=0; t < tileData.length; t++){
-                    if (plan_to_move === tileData[t]){  //find the corresponding grid of the move
-                    textSize(100)
-                    text("X",coords[2*t] + width/8,coords[2*t+1] + height*1.35/8)
-                    moves[2].push(tileData[t]);
-                    coords.splice(2*t,2);
-                    tileData.splice(t,1)
-                    player+=1               //send player back to even so circle goes
-                    winner(2,false,'x');
-                    minimax = -1            //reset minimax to -1 so checking for win & block works
-                    bestmove = tileData     // make random moves next as its default setting
-                    }
-                }
-            }
-        }
-        
+
         //The game itself (drawing,sketch):---------------------------------
 
         function mousePressed(){
             if (mouseX > width/8 && mouseX < width/4 && mouseY > height-3/4*height/8 && mouseY < height-1/4*height/8){
-                setup();} //mouse in the reset box
+                setup();}       //mouse in the reset box
             if (mouseX > width/27 && mouseY > height/16 && mouseX < width/27 + width/10 && mouseY < height/16 + height*3/80){
                 mode = !mode;   //swap the mode; true to false, false to true
                 setup();}
             if (player !== false){                                              //Is clicking allowed?
                 for (r=0,d=0 ; r<18,d<9 ; r+=2,d++){                            //the loop for coordinates
-                    if (mouseX > coords[r] && mouseX < coords[r] + width/4){    //in the range?
+                    if (mouseX > coords[r] && mouseX < coords[r] + width/4){    //mouseX&Y in the range?
                         if (mouseY > coords[r+1] && mouseY < coords[r+1] + height/4){
                             player++    //player swap. inital -1 becomes 0
                             fill(200)
@@ -183,7 +156,31 @@
                             }
                             coords.splice(r,2);
                             tileData.splice(d,1);
-                            nextmove(bestmove)  //this code is found in function nextmove
+                            if (!mode && player !== false){
+                                bestmove = random(bestmove)     //the move will be based on remaining grids
+                                thinking(false)                 //check if the computer can win
+                                if (minimax !== -1){            //minimax is originally -1 so if it changes
+                                    bestmove = minimax          //[winning] move
+                                }else if (minimax === -1){      //check if the human player can win
+                                    thinking(true)
+                                    if (minimax !== -1){        //if the human can win
+                                        bestmove = minimax      //[block] move
+                                    }
+                                }
+                                for (t=0; t < tileData.length; t++){
+                                    if (bestmove === tileData[t]){  //find the corresponding grid of the move
+                                        textSize(100)
+                                        text("X",coords[2*t] + width/8,coords[2*t+1] + height*1.35/8)
+                                        moves[2].push(tileData[t]);
+                                        coords.splice(2*t,2);
+                                        tileData.splice(t,1)
+                                        player+=1               //send player back to even so circle goes
+                                        winner(2,false,'x');
+                                        minimax = -1            //reset minimax to -1 so checking for win & block works
+                                        bestmove = tileData     // make random moves next as its default setting
+                                    }
+                                }
+                            }
                         }
                     }
                 }
