@@ -18,9 +18,12 @@
         
         
         //The start and restart-------------------------------------
-        function setup(){   //setup() will be called to reset
-            //the tic tac toe grid
+        function setup(){   
             createCanvas(800,800)
+            reset()
+        }
+        function reset(){
+            //the tic tac toe grid
             background(200)
             line(width *3/8, height/8, width *3/8, height *7/8)
             line(width *5/8, height/8, width *5/8, height *7/8)
@@ -102,16 +105,16 @@
                     }
             }
             if (player === 8){ //well if 9 moves made (-1 + 9 = 8) and player is not false but a number
-                 text('X O Draw!',width*5/8,height-height/40) //no winner becomes a draw
+                 text('X O Draw!',width*5/8,height-height/40) //no declare winner becomes a draw
             }
 
         }
         
         //The computer's brain (AI)------------------------------------------
         function thinking(for_side){
-            for (var j=0; j<8; j++){    //Look for two in a row, then decide to [block] or [play win]
+            for (var j=0; j<8; j++){
                 if (wincombo[j][0]===for_side && wincombo[j][1]===for_side && wincombo[j][2]!==!for_side){
-                    minimax = wincombo[j][2]    
+                    minimax = wincombo[j][2]
                 }else if (wincombo[j][1]===for_side && wincombo[j][2]===for_side && wincombo[j][0]!==!for_side){
                     minimax = wincombo[j][0]
                 }else if (wincombo[j][0]===for_side && wincombo[j][2]===for_side && wincombo[j][1]!==!for_side){
@@ -123,14 +126,14 @@
         //The game itself (drawing,sketch):---------------------------------
 
         function mousePressed(){
-            if (mouseX > width/8 && mouseX < width/4 && mouseY > height-3/4*height/8 && mouseY < height-1/4*height/8){
-                setup();}       //mouse in the reset box
+            if (mouseX > width/8 && mouseX < width/4 && mouseY > height-3/4*height/8 && mouseY < height-1/4*height/8 && player !== 'pause'){
+                reset();} //mouse in the reset box
             if (mouseX > width/27 && mouseY > height/16 && mouseX < width/27 + width/10 && mouseY < height/16 + height*3/80){
                 mode = !mode;   //swap the mode; true to false, false to true
-                setup();}
+                reset();}
             if (player !== false){                                              //Is clicking allowed?
                 for (r=0,d=0 ; r<18,d<9 ; r+=2,d++){                            //the loop for coordinates
-                    if (mouseX > coords[r] && mouseX < coords[r] + width/4){    //mouseX&Y in the range?
+                    if (mouseX > coords[r] && mouseX < coords[r] + width/4){    //in the range?
                         if (mouseY > coords[r+1] && mouseY < coords[r+1] + height/4){
                             player++    //player swap. inital -1 becomes 0
                             fill(200)
@@ -158,12 +161,12 @@
                             tileData.splice(d,1);
                             if (!mode && player !== false){
                                 bestmove = random(bestmove)     //the move will be based on remaining grids
-                                thinking(false)                 //check if the computer can win
-                                if (minimax !== -1){            //minimax is originally -1 so if it changes
+                                thinking(false)              //check if the computer can win
+                                if (minimax !== -1){                //minimax is originally -1 so if it changes
                                     bestmove = minimax          //[winning] move
-                                }else if (minimax === -1){      //check if the human player can win
+                                }else if (minimax === -1){          //check if the human player can win
                                     thinking(true)
-                                    if (minimax !== -1){        //if the human can win
+                                    if (minimax !== -1){            //if the human can win
                                         bestmove = minimax      //[block] move
                                     }
                                 }
