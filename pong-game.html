@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>p5js Template</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.3/p5.js"></script>
+    
+    <script>
+        // Declare Variables
+        var direction = [0,0];                      //start with 0 movement
+        var x;                                      //ball x
+        var y;                                      //ball y
+        var boxColors = [192,'yellow','blue','red'] //hardness color
+        var speedBoost = 1                          //regular 1 * speed
+        var paddleWidth = 150
+        var boxes = [[],[]]
+        var hit = [[],[]]
+        
+        function setup() {
+            createCanvas(800,600);
+            noCursor()
+            textAlign(CENTER)
+            textSize(20)
+            x = width/2
+            y = height/2
+            for (i=0; i<15; i++){
+                append(boxes[0],i*width/15)
+                append(boxes[1],i*width/15)
+                append(hit[0],floor(random(2,8)))
+                append(hit[1],floor(random(1,6)))
+            }
+        }
+        
+        // Only happens once, game begins
+        function mouseClicked(){
+            if (direction[0] == 0){
+                direction = [5,5]
+            }
+        }
+        
+        // Game ends either with a 'win' or a 'lose'
+        function endGame(say){
+            direction[0] = false
+            noLoop()
+            background(128)
+            textSize(50)
+            text(say,width/2,height/2)
+            text('Like The Game?', width/2,height/2+70)
+            text('Then Code It!',width/2,height/2+130)
+        }
+        
+        // Test which color a brick's hardness should be represented by
+        function fillBoxes(value,condition,fillColor){
+            if (value >= condition && value <= condition+1){
+                fill(fillColor)
+            }
+        }
+        
+        // Test if the ball collides with the bricks; take points off from bricks
+        function hitBoxes(index,pos_y){
+            for (i=0; i < boxes[index].length; i++){
+                if ((x >= boxes[index][i] && x <= boxes[index][i]+width/15) 
+                && ((y < pos_y && y > pos_y - 10) || (y > pos_y-25 && y < pos_y-15))){
+                    hit[index][i] = hit[index][i] - 1
+                    direction[1] = direction[1] * -1
+                }
+                if (hit[index][i] === 0){
+                    hit[index].splice(i,1)
+                    boxes[index].splice(i,1)    //remove the brick that has 0 points
+                }
+            }
+        }
+        
+        // Draw the bricks and fill them with the corresponding 'hardness' color
+        function drawBoxes(index,box_y,text_y){ 
+            for (i=0; i<boxes[index].length; i++){
+                for (r=0; r <= 12; r+=2){
+                    fillBoxes(hit[index][i],r,boxColors[r/2])
+                }
+                rect(boxes[index][i],box_y,width/15,25)
+                fill(0)
+                text(hit[index][i],boxes[index][i]+30,text_y)
+            }
+        }
+        
+        // call most of the defined functions and move/draw the ball
+        function draw() {
+            if (direction[0]!== false){
+                paddle()
+                ellipse(x,y,15)
+                x = x + direction[0]
+                y = y + direction[1]
+                drawBoxes(0,20,40)
+                drawBoxes(1,70,90)
+                fill(255)
+                hitBoxes(1,95)
+                hitBoxes(0,45)
+                strokeWeight(3)
+                edge(-1*y,0,1)
+                edge(x,width-3,0)
+                edge(-1*x,0,0)
+                collide()
+            }
+            // show some text before the speed becomes something other than zero
+            if (direction[0] === 0){
+                text('*Randomly Generated Numbers*',width/2,2*height/5)
+                text('[Click Mouse To Start]',width/2,3*height/5)
+                text('The Number on the boxes',width/2,7.1*height/10)
+                text('tells you how many times to hit it',width/2,7.5*height/10)
+                text('Hit Top or Bottom of box is 1 point',width/2,4*height/5)
+                text('Hit the inside can destroy it right away!',width/2,6*height/7)
+            }
+            // all bricks are destroyed
+            if (boxes[0].length + boxes[1].length == 0){
+                endGame('You Win')
+            }
+        }
+        
+        // map the x value depending on where it hits the paddle 
+        function mapx(range){
+            if (direction[0] < 0){                      //the x speed was negative
+                direction[0] = -1 * range * speedBoost  //keep it negative
+            }else{
+                direction[0] = range * speedBoost
+            }
+        }
+        
+        // use mapx. Checks collision with paddle and provide a new (y) value
+        function collide(){
+            if (y > height-20){
+                if (x > mouseX-2 && x < mouseX + paddleWidth+2){
+                    paddleWidth = constrain(paddleWidth,50,150) //keep length of paddle at least 50 pixels
+                    paddleWidth-=2.5    //shorten paddle
+                    speedBoost+= 0.005  //increase 0.5% speed
+                    if (x < mouseX + paddleWidth/2){
+                        direction[1] = -speedBoost * map(x,mouseX-2,mouseX+paddleWidth/2,1.5,6)
+                        mapx(map(x,mouseX-2,mouseX+paddleWidth/2,6,0.5))
+                    }else{
+                        direction[1] = -speedBoost * map(x,mouseX+paddleWidth/2,mouseX+paddleWidth+2,6,1.5)
+                        mapx(map(x,mouseX+paddleWidth/2,mouseX+paddleWidth+2,0.5,6))
+                    }
+                }else{
+                    endGame('Game Over')    //ball reaches the y value but not touching paddle
+                    
+                }
+            }
+        }
+        
+        // checks ball hits each edge on the screen besides the bottom edge and makes a change in x or y
+        function edge(variable,condition,index){
+            if (variable > condition){
+                direction[index] = -1 * direction[index] 
+            }
+        }
+        
+        // draw the paddle depending on mouse's X location
+        function paddle(){
+            background(128)
+            strokeWeight(2)
+            fill(255)
+            mouseX = constrain(mouseX,0,width-paddleWidth)
+            rect(mouseX,height-20,paddleWidth,20)
+        }
+    </script>
+</head>
+
+<body>
+<form><input TYPE="button" onClick="history.go(0)" value="Reset"></form>
+    <div id="code" class="container-fluid">
+        <script src="https://gist-it.appspot.com/github/zhiyuanc1718/p5js/blob/master/pong-game.html?footer=0"></script>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script>
+        $(window).bind("load", function() {
+            $('#code').before($('#defaultCanvas0').remove());
+        });
+    </script>
+</body>
+
+
+</html>
