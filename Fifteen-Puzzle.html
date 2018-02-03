@@ -1,0 +1,444 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>p5js Template</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.3/p5.js"></script>
+    
+    <script>
+        var x_coords;
+        var y_coords;
+        var tiles;
+        var data;
+        var inversions;
+        var game = [0]; //determine game status: progress to win/ begin
+        var code;
+        var letters = 'b,x,c,d,g,h,k,z,v,j,q,w,a,s,l,e'.split(',');
+        var time; 
+        function setup() {
+            createCanvas(600,600);
+            textAlign(CENTER)
+        }
+        
+        // this function generates all the coordinate values
+        function generate_coords(){
+            for (h=0; h<4 ; h++){
+                for (l=0; l<4 ; l++){
+                    x_coords.push(width/6 + l * width/6)
+                    y_coords.push(height/6 + h*height/6)
+                }
+            }
+        }
+        function order_numbers_and_positions(){
+            generate_coords();
+            inversions = [[],[0]]
+            //order the tiles' numbers in a list from top (to right) to bottom
+            for (i=1; i<x_coords.length; i++){
+                for (r=0; r<tiles.length; r++){
+                    tiles[r].insert(i) 
+                }
+            }
+            //tell the tiles to know their final spot
+            for (i=0; i<tiles.length; i++){
+                tiles[i].final_position()
+            }
+        }
+        function scramble(){
+            // forming the data names
+            x_coords = [];
+            y_coords = [];
+            tiles = [];
+            data = [];
+            code = [];
+            time = [0,0,'FrameCount_Start'] //[0] = min, [1] = sec, [2] = cs
+            for (i=1; i<16; i++){
+                game[i] = 0
+            }
+            
+            //generating puzzle---------------- all of the rest of the function
+            
+            generate_coords();
+            
+            //create the numbers 1 to 15 for the tiles
+            for (i=1; i<16; i++){
+                data.push(i)
+            }
+            
+            //generating random tile positions 
+            for (i=0,r=0; i<15; i++){
+                r = floor(random(data.length))
+                tiles[i] = new Tile(r,null)
+            }
+        
+            order_numbers_and_positions()
+            
+            //find blank's tile from 1 to 16
+            //keep x_coords[0] since its blank's x
+            for (i=1; i<x_coords.length; i++){
+                if (x_coords[0] == x_coords[i] && y_coords[0] == y_coords[i]){
+                    inversions[0].splice(i-1,0,16)
+                }
+            }
+            x_coords.splice(1,x_coords.length-1);
+            y_coords.splice(1,y_coords.length-1);
+            
+            is_puzzle_solvable()
+        }
+        function count_Total_Inversions(){
+            for (i=0; i<inversions[0].length; i++){
+                for(x=i+1; x<inversions[0].length; x++){
+                    if (inversions[0][i] !== 16 && inversions[0][i] > inversions[0][x]){
+                        inversions[1][0]++;
+                    }
+                }
+            }
+        }
+        function createCode(){
+            for (i=0; i<inversions[0].length; i++){
+                if (inversions[0][i] == 16){
+                    code.push(letters[0]);
+                }else{
+                    code.push(letters[inversions[0][i]]);
+                }
+            }
+            code = code.join('');
+        }
+        function detect_parity(){
+            //detect solvability through parity------------------------
+            //parity(mathematics) means if number is odd or even
+                if (inversions % 2 ==0 ){
+                    inversions = true;   //inversion count is even
+                }else{
+                    inversions = false;  //inversion count is odd
+                }
+            
+                //detect blank's position [row]
+                if (((2*width/3-y_coords[0])/100+1) % 2 == 0){
+                    y_coords[1] = true;  //the blank's position is second from last row or 1st row
+                }else{
+                    y_coords[1] = false; //the blank's position is last row or second row
+                }
+                
+        }
+        
+        function is_puzzle_solvable(){
+            //Inversion algorithm: checks total inversions and use the output 
+            //to determine Whether the random puzzle is solvable
+            count_Total_Inversions();
+            
+            if (inversions[1][0] > 55){ 
+            /* What is an inversion? An inversion is a pair of numbers where
+            the pair (a,b); a comes before b and a is greater than b */
+                
+                //create a code for the random puzzle if no code made yet--------
+                if (code.length == 0){ 
+                    createCode();
+                }
+                //------------------------------------------------
+                inversions = inversions[1][0];
+                detect_parity();
+                
+                if (y_coords[1] === inversions){
+                    scramble();
+                }else{
+                    console.log('Code of Puzzle: ' + code);
+                }
+            }else{
+                scramble();     
+            }
+        }
+        
+        function correct_position(number){
+            //give the tile a '1' if they are located at their final winning position.
+            //this function checks whether a value is 1. use to check all tile's held value either 0 or 1
+            return number == 1;
+        }
+        
+        //draw the game [tiles]
+        function draw() {
+            background(200);
+            strokeWeight(2);
+            fill(255);
+            rect(width/6,height/12,width/3,height/15,20);
+            rect(51 * width/100,height/12,width/10,height/15);
+            textSize(width/30);
+            fill(0);
+            text('Scramble the puzzle',width/3,height/8);
+            text('Code',28 * width/50, height/8)
+            fill(128);
+            rect(width/6,height/6,2*width/3,2*height/3);
+            if (game[0] === 1){
+                for (i=0; i<15; i++){
+                    tiles[i].display();
+                    tiles[i].move();
+                    tiles[i].check();
+                }
+                fill(0);
+                textSize(20);
+                text('Puzzle Code: ' + code + ' [Check Console!]',width/2,9 * height/10)
+                text('Copy It Down To Challenge Your Friends!',width/2,19 * height/20)
+                textSize(width/20)
+                fill(0)
+                text('Time = ' + time[0] + " : " + time[1], 4 * width/5, height/8)
+                if ((frameCount - time[3]) % 60 == 0){
+                    time[1] = time[1] + 1;
+                }
+                if (time[1] == 60){
+                    time[1] = time[1] - 60;
+                    time[0] = time[0] + 1;
+                }
+                if (game.every(correct_position)){
+                    game[0] = false;
+                }
+            }else{
+                fill(0)
+                if (game[0] === false){
+                    text('You Won!',width/2,9 * height/10)
+                    text('Click Scramble to play again',width/2,19 * height/20)
+                    textSize(width/20)
+                    text('Time = ' + time[0] + " : " + time[1], 4 * width/5, height/8)
+                }else{
+                    text('Click on Scramble to start',width/2,9 * height/10)
+                    text('The above is the final product',width/2,19 * height/20)
+                }
+                for (i=0; i<4; i++){
+                    for (r=0; r<4; r++){
+                        if (r * i !== 9){
+                            strokeWeight(3)
+                            if (r % 2 == 0){
+                                fill(255,0,0)
+                            }else{
+                                fill(255)
+                            }
+                            rect(width/6 * (r+1),(i+1)*height/6,width/6,height/6)
+                            if (r % 2 == 0){
+                                fill(255,255,0)
+                            }else{
+                                fill(0,0,255)
+                            }
+                            textSize(width/15)
+                            text(i*4+r+1,width/6 * (r+1) + width/12, (i+1)*height/6 + height/10)
+                            
+                        }
+                    }
+                }
+            }
+        }
+        function Tile(num,given){
+            if (given == null){
+                this.position = floor(random(x_coords.length));
+                this.tag = data[num];
+            }else{
+                this.tag = letters.indexOf(given);
+                this.position = code.indexOf(given); 
+            }
+            
+            this.x = x_coords[this.position];
+            this.y = y_coords[this.position];
+            
+            
+            if (num !== null){
+                data.splice(num,1);
+            }
+            
+            if(given == null){
+                x_coords.splice(this.position,1);
+                y_coords.splice(this.position,1);
+            }
+                
+            this.splice_method_2 = function(){
+                x_coords.splice(this.position,1,true);
+                y_coords.splice(this.position,1,true);
+            };
+            this.new_x;
+            this.new_y;
+            this.final;
+            
+            
+            //check to see if the tile is at where it should end up
+            this.check = function(){
+                if (this.x == this.final[0] && this.y == this.final[1]){
+                    game[this.tag] = 1;
+                }else{
+                    game[this.tag] = 0;
+                }
+            };
+            
+            //know the final position on grid
+            this.final_position = function(){
+                this.final = [x_coords[this.tag],y_coords[this.tag]];
+                
+            };
+            
+            //put the number tag into a list with the order shown on screen
+            this.insert = function(index){
+                if (this.x == x_coords[index] && this.y == y_coords[index]){
+                    inversions[0].push(this.tag);
+                }
+            };
+            
+            //draw the tile with its labelings
+            this.display = function(){
+                // give the tile a color
+                if (this.tag % 2 == 0){
+                    fill(255)       //even numbers have white sqaures
+                }else{
+                    fill(255,0,0)   //odd numbers have red squares
+                }
+                
+                //draw the tile
+                strokeWeight(3)
+                rect(this.x,this.y,width/6,height/6)
+                
+                // give the number a color and write the number
+                if (this.tag % 2 == 0){
+                    fill(0,0,255)   //even numbers have blue numbers
+                }else{
+                    fill(255,255,0) //odd numbers have yellow numbers
+                }
+                textSize(40)
+                strokeWeight(1)
+                text(this.tag,this.x+width/12,this.y+height/10)
+            }
+            
+            //the tile's x and y changes (after moved)
+            this.new_position = function(){
+                //swapping coordinates with the blank
+                this.new_x = x_coords[0];    //store blank's x
+                this.new_y = y_coords[0];    //store blank's y
+                x_coords[0] = this.x;        //blank takes tile's x
+                y_coords[0] = this.y;        //blank takes tile's y
+                this.x = this.new_x;         //tile takes blank's x
+                this.y = this.new_y;         //tile takes blank's y
+            };
+            
+            //the conditions for when a tile can move
+            this.move = function(){
+                if (mouseX > this.x && mouseX < this.x + width/6 && 
+                    mouseY > this.y && mouseY < this.y + height/6 && mouseIsPressed){
+                    
+                    if (this.x + width/6 == x_coords[0] && this.y == y_coords[0]){
+                        this.new_position();
+                    }
+                    else if(this.x - width/6 == x_coords[0] && this.y == y_coords[0]){
+                        this.new_position();
+                    }
+                    else if (this.x == x_coords[0] && this.y - height/6 == y_coords[0]){
+                        this.new_position();
+                    }
+                    else if (this.x == x_coords[0] && this.y + height/6 == y_coords[0]){
+                        this.new_position();
+                    }
+                }
+            };
+        }
+        function mousePressed(){
+            if (mouseX > width/6 && mouseX < width/2 && mouseY > height/12 && mouseY < height/12 + height/15){
+                scramble();
+                game[0] = 1;
+                time[3] = frameCount
+            }
+            if (mouseX > 51 * width/100 && mouseX < 51 * width/100 + 2 * width/15){
+                if (mouseY > height/12 && mouseY < height/12 + height/15){
+                    
+                    code = prompt('What is your given code?');
+                    
+                    if (code !== null && code.length == 16){
+                        code = code.split('');
+                        for (i=0; i<code.length; i++){
+                            if (i < code.length){
+                                for (x=i+1; x < code.length; x++){
+                                    if (code[i] === code[x] || letters.indexOf(code[i]) === -1){
+                                        //break loop when one code letter does not belong (-1)
+                                        x = code.length
+                                        i = code.length
+                                        tiles = [];
+                                        code = 0;
+                                        game[0] = 0;
+                                    }
+                                }
+                            }
+                        }
+                        if (code !== 0){
+                            //all letters have pass the checking exam
+                            x_coords = [];
+                            y_coords = [];
+                            time = [0,0,'FrameCount_Start']
+                            tiles = [];
+                            for (i=1; i<16; i++){
+                                game[i] = 0
+                            }
+                            game[0] = 1;
+                            
+                            generate_coords();
+                            
+                            //self generated puzzle with code makes tiles(num value) == null
+                            //to specify that this is a specific puzzle, not random
+                            for (r=0; r < code.length; r++){
+                                if (letters.indexOf(code[r]) !== 0){
+                                    tiles.push(new Tile(null,code[r]))
+                                }
+                            }
+                            
+                            //leave x_coords and y_coords with only blank's position
+                            for (i=0; i<tiles.length; i++){
+                                tiles[i].splice_method_2()
+                            }
+                            
+                            //create the blank's position: aka x_coords[0] and y_coords[0]
+                            for(r=0; r<x_coords.length; r++){
+                                if (x_coords[r] !== true){
+                                    x_coords = [x_coords[r]]
+                                    y_coords = [y_coords[r]]
+                                    r = 100 // end loop with whatever number above 15
+                                }
+                            }
+                            
+                            
+                            order_numbers_and_positions();
+                            
+                
+                            x_coords.splice(1,x_coords.length-1);
+                            y_coords.splice(1,y_coords.length-1);
+                            
+                            count_Total_Inversions();
+                            inversions = inversions[1][0];
+                            
+                            if (inversions > 55){
+                                detect_parity()
+                                if (y_coords[1] === inversions){
+                                    game[0] = 0;
+                                    console.log("Code did not completely met requirements, failed to proceed");
+                                }else{
+                                    mouseIsPressed = false; //update the mouse
+                                    code = code.join(''); //combine code back into a whole
+                                    time[3] = frameCount;
+                                    console.log('Code of Puzzle: ' + code)
+                                }
+                            }else{
+                                game[0] = 0;
+                                console.log("Code did not completely met requirements, failed to proceed");
+                            }
+                        }
+
+                    }else{
+                        code = [];
+                        game[0] = 0;
+                    }
+                }
+            }
+        }
+    </script>
+<body>
+<form><input TYPE="button" onClick="history.go(0)" value="Reset"></form>
+    <div id="code" class="container-fluid">
+        <script src="https://gist-it.appspot.com/github/zhiyuanc1718/p5js/blob/master/Fifteen-Puzzle.html?footer=0"></script>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script>
+        $(window).bind("load", function() {
+            $('#code').before($('#defaultCanvas0').remove());
+        });
+    </script>
+</body>
