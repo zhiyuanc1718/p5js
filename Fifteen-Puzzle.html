@@ -43,20 +43,22 @@
                 tiles[i].final_position()
             }
         }
-        function scramble(){
+        function initialize(){
             // forming the data names
             x_coords = [];
             y_coords = [];
             tiles = [];
             data = [];
-            code = [];
             time = [0,0,'FrameCount_Start']; //[0] = min, [1] = sec, [2] = cs
             for (i=1; i<16; i++){
                 game[i] = 0
             }
+        }
+        function scramble(){
+            initialize()
+            code = [];
             
             //generating puzzle---------------- all of the rest of the function
-            
             generate_coords();
             
             //create the numbers 1 to 15 for the tiles
@@ -386,13 +388,7 @@
                         if (code !== 0){
                             //all letters have pass the checking exam
                             //begins specific generation. Deep testing.
-                            x_coords = [];
-                            y_coords = [];
-                            time = [0,0,'FrameCount_Start'];
-                            tiles = [];
-                            for (i=1; i<16; i++){
-                                game[i] = 0
-                            }
+                            initialize();
                             game[0] = 1;
                             generate_coords();
                             
