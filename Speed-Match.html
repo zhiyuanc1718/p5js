@@ -1,0 +1,258 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>p5js Template</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.3/p5.js"></script>
+    
+    <script>
+    //Must Need For Game
+    var score = 0; 
+    var start = false;   //use to create game parts [start to end]
+    var counts = [];  //use to make counting circles
+    var time = [0,45];
+    var shape_color = [];
+    var previous_shape;     
+    var speed_tiles = [];  
+    
+    //Effects (can be removed--)
+    var screen; 
+    var spamming = false; 
+        function setup() {
+            createCanvas(500,500);
+        }
+        function createNewTile(){
+            //remember last shape and display a new shape
+            previous_shape = speed_tiles[0].shape;
+            speed_tiles.splice(0,1);
+            speed_tiles.push(new Speed_Match_Tile());
+        }
+        function draw() {
+            //not allow players to keep holding on to their key
+            if (! keyIsPressed){
+                spamming = false;
+            }
+            background(160)
+            
+            switch (start){
+            case "starting":
+                //make the count down circles
+                for (i=0; i<3; i++){
+                    counts.push(new Count(3-i))
+                }
+                start = "counting";
+                time[0] = frameCount //moment when player first sees countdown
+            break;
+            case "counting":
+                //display a shape and start countdown
+                speed_tiles[0].display();
+                if (counts.length > 0){
+                    counts[0].display();
+                }else{
+                    start = "begin";
+                }
+                if ((frameCount - time[0]) % 60 == 0){
+                    counts.splice(0,1);
+                }
+            break;
+            case "begin":
+                //allow player to start the game and start making shapes
+                start = true;
+                createNewTile();
+                time[0] = frameCount; //update time : moment when game begins
+            break;
+            case true:
+                //draw shape and deduct time by 1 per second
+                textSize(20)
+                fill(255)
+                text("Is This The Same Shape As The One Before ?",width/2,height/5)
+                speed_tiles[0].display();
+                if ((frameCount - time[0]) % 60 == 0){
+                    time[1]--;
+                }
+                fill(0)
+                textSize(30)
+                
+                //displaying time format
+                if (time[1] > 9){
+                    text("Time Remaining [" + 0 + " : " + time[1] + "]",2*width/5,height/8)
+                }else{
+                    text("Time Remaining [" + 0 + " : " + 0 + time[1] + "]",2*width/5,height/8)
+                }
+                
+                //displaying the current [accuracy score]
+                textSize(20)
+                text("Score : " + score, 7*width/8,height/10)
+                
+                //end game when time reaches 0 or score is up to max of 270.
+                if (time[1] == 0 || score >= 270){
+                    start = "end";
+                }
+            break;
+            case "end":
+                //Draw a bar to represent 
+                var length = map(score,0,270,0,400)
+                console.log(length)
+                rectMode(CORNER)
+                fill(0)
+                textSize(30)
+                text("Your Speed",width/2,height/8)
+                text(floor(map(score,0,270,0,2000)),width/2,2*height/5)
+                fill(255)
+                rect(50,height/2,400,30)
+                fill(0,0,255)
+                rect(50,height/2,length,30)
+            break;
+            default: //aka game havent start yet (false)
+                textAlign(CENTER)
+                textSize(50)
+                if (frameCount % 20 == 0){
+                    screen = [random(255),random(255),random(255)]
+                }
+                fill(screen[0],screen[1],screen[2])
+                text("SPEED MATCH",width/2,height/5)
+                textSize(20)
+                fill(0)
+                text("Version By Zhiyuan & Shuquan",width/2,height/3)
+                text("Inspired by Lumosity App",width/2,2*height/5)
+                text("Testing speed while being distracted",width/2,height/2)
+                fill(255)
+                text("To Start",width/2,2*height/3)
+                text("Tap one of your given buttons", width/2,3*height/4)
+            break;
+            }
+        }
+        
+        function keyPressed(){
+            if ((keyCode == 37 || keyCode == 39) && spamming === false){
+                spamming = true;
+                if (start === false){
+                    speed_tiles.push(new Speed_Match_Tile());
+                    start = "starting";
+                }else if (start === true){
+                    switch (keyCode){   //switch is a shorter way of "IF"
+                        case 37: //when left arrow 
+                            if (previous_shape !== speed_tiles[0].shape){
+                                score+=3;
+                            }else{
+                                score-=1;
+                                time[1]--;
+                            }
+                            createNewTile();
+                        break;
+                        case 39: //when right arrow
+                            if (previous_shape === speed_tiles[0].shape){
+                                score+= 3;
+                            }else{
+                                score-= 1;
+                                time[1]--;
+                            }
+                            createNewTile();
+                        break;
+                    }
+                    score = constrain(score,0,270)
+                }
+            }
+        }
+        
+        //Objects
+        
+        function Count(countdown){
+            this.num = countdown;
+            this.display = function(){
+                fill(255);
+                ellipse(width/2,4*height/5,50);
+                fill(0);
+                textSize(30);
+                text(this.num,width/2,4*height/5+10);
+            };
+        }
+        function Speed_Match_Tile(){
+            this.x = width/2;
+            this.y = height/2;
+            this.vary = floor(random(1,3))
+            if (shape_color.length === 0){
+                shape_color = [random(255),random(255),random(255)];
+            }
+            
+            this.fill = shape_color
+            
+            this.shape;
+            if (previous_shape == null){
+                this.shape = floor(random(1,5));
+                previous_shape = this.shape;
+            }else{
+                //have a 46% chance of getting the same shape
+                if (random(1) >= 0.55){
+                    this.shape = previous_shape;
+                    this.fill = [random(255),random(255),random(255)];
+                    shape_color = this.fill;
+                }else{
+                    //steps to create a different shape
+                    this.shape = previous_shape;
+                    //set the loop to run until the two shapes
+                    //(prev and current) are not the same.
+                    while (this.shape == previous_shape){
+                        this.shape = floor(random(1,5));
+                        // we are using while-loop because we do not know how
+                        // many times it will take to get a different number
+                    }
+                }
+            }
+            this.display = function (){
+                //draw the white centered square
+                fill(255);
+                rectMode(CENTER);
+                rect(this.x,this.y,200,200);
+                //draw the corresponding shape
+                switch(this.shape){
+                    case 1: // chosen shape is circle---
+                        fill(this.fill[0],this.fill[1],this.fill[2]);
+                        ellipseMode(CENTER);
+                        if (this.vary == 1){
+                            //large circle
+                            ellipse(this.x,this.y,120);
+                        }else{
+                            //small circle
+                            ellipse(this.x,this.y,80)
+                        }
+                    break;
+                    case 2: //sqaure
+                        fill(this.fill[0],this.fill[1],this.fill[2]);
+                        if (this.vary == 1){
+                            rect(this.x,this.y,100,100);
+                        }else{
+                            rect(this.x,this.y,70,70)
+                        }
+                    break;
+                    case 3: //triangle
+                        fill(this.fill[0],this.fill[1],this.fill[2]);
+                        if (this.vary == 1){
+                            //upwards triangle
+                            triangle(this.x-50,this.y+50,this.x,this.y-50,this.x+50,this.y+50);
+                        }else{
+                            //downwards triangle
+                            triangle(this.x-50,this.y-50,this.x+50,this.y-50,this.x,this.y+50)
+                        }
+                    break;
+                    case 4: //diamond (rhombus)
+                        fill(this.fill[0],this.fill[1],this.fill[2]);
+                        beginShape();
+                        vertex(this.x-50,this.y);
+                        vertex(this.x,this.y-70);
+                        vertex(this.x+50,this.y);
+                        vertex(this.x,this.y+70);
+                        endShape(CLOSE);
+                    break;
+                }
+            };
+        }
+        
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
