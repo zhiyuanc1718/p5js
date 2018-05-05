@@ -385,7 +385,7 @@
                 if (mouseX > this.x && mouseX < this.x + (width/6 * 4/n) && mouseY > this.y && 
                     mouseY < this.y + (height/6 * 4/n) && mouseIsPressed && !onHold){
                     
-                    onHold = true;
+                    onHold = True;
                     if (round(this.x + width/6 * 4/n) == round(x_coords[0]) && round(this.y) == round(y_coords[0])){
                         this.new_position();
                     }
@@ -401,27 +401,30 @@
                 }
             };
         }
-        function mouseClicked(){
+        function mousePressed(){
             //concept: if point (mouseX,mouseY) lies on triangle (ABC) then
             //Area(PAB) + Area(PBC) + Area(PAC) will be equal to Area(ABC)
             //Note: absolute value will be needed because area cannot be negative
             //Note 2: Round can be necessary to prevent problems for decimals
             //x1(y2 – y3) + x2(y3 – y1) + x3(y1-y2)]/2 for area -- GeeksforGeeks
             
-            if (n2 < 8 && 280 === abs(round((mouseX*(141-121) + 26*(121-mouseY) + 
+            if (n2 < 8 && !onHold && 280 === abs(round((mouseX*(141-121) + 26*(121-mouseY) + 
             40*(mouseY-141))/2)) + abs(round((mouseX*(121-141) + 40*(141-mouseY) + 
             54*(mouseY-121))/2)) + abs(round((26*(141-mouseY) + 54*(mouseY-141))/2))){
                 n2++; //Increase Size on click within green triangle
+                onHold = True;
             }
             
-            if (n2 > 3 && 280 === abs(round((mouseX*(146-166) + 26*(166-mouseY) + 
+            if (n2 > 3 && !onHold && 280 === abs(round((mouseX*(146-166) + 26*(166-mouseY) + 
             40*(mouseY-146))/2)) + abs(round((mouseX*(166-146) + 40*(146-mouseY) + 
             54*(mouseY-166))/2)) + abs(round((26*(146-mouseY) + 54*(mouseY-146))/2))){
                 n2--; //Decrease Size on click within red triangle
+                onHold = True;
             }
             
             //necessary to check whether player clicks on scramble button to begin game
-            if (mouseX > width/6 && mouseX < width/2 && mouseY > height/12 && mouseY < height/12 + height/15){
+            if (mouseX > width/6 && mouseX < width/2 && mouseY > height/12 && mouseY < height/12 + height/15 && !onHold){
+                onHold = True;
                 n = n2;
                 scramble();
                 game[0] = 1;
@@ -430,8 +433,8 @@
             
             //player clicks on code button
             if (mouseX > 51 * width/100 && mouseX < 51 * width/100 + 2 * width/15){
-                if (mouseY > height/12 && mouseY < height/12 + height/15){
-                    
+                if (mouseY > height/12 && mouseY < height/12 + height/15 && !onHold){
+                    onHold = True;
                     code = prompt("What is your given code for the 4 x 4 ONLY? Just A Heads Up : " +
                     "If You give the wrong code, even if a game started, you will be directed to main page");
                     
